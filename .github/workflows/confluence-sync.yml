@@ -1,6 +1,8 @@
 name: Sync ALL Confluence Spaces
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 0' # Runs weekly
 
 jobs:
   export:
@@ -16,14 +18,13 @@ jobs:
 
       - name: Export ALL Spaces
         env:
-          # These variable names (CME_AUTH_USER/TOKEN) are the standard way 
-          # to pass credentials to the confluence-markdown-exporter tool
           CME_AUTH_USER: ${{ secrets.CONFLUENCE_USERNAME }}
           CME_AUTH_TOKEN: ${{ secrets.CONFLUENCE_API_TOKEN }}
+          CME_OUTPUT_PATH: ./wiki
         run: |
-          # We only provide the URL and the output path here
-          /home/runner/.local/bin/cme orgs ${{ secrets.CONFLUENCE_URL }} \
-            --output.path ./wiki
+          # The tool uses environment variables for Auth and Output Path
+          # It only requires the Base URL as an argument
+          /home/runner/.local/bin/cme orgs "${{ secrets.CONFLUENCE_URL }}"
         
       - name: Commit and push changes
         uses: EndBug/add-and-commit@v9
