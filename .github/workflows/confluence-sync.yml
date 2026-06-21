@@ -1,0 +1,33 @@
+name: Sync ALL Confluence Spaces
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 0' # Weekly sync
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install confluence-markdown-exporter
+        run: curl -LsSf https://uvx.sh/confluence-markdown-exporter/install.sh | sh
+
+      - name: Export ALL Spaces
+        run: |
+          # The 'orgs' command fetches everything from your base URL
+          /home/runner/.local/bin/cme orgs ${{ secrets.CONFLUENCE_URL }} \
+            --auth.user ${{ secrets.CONFLUENCE_USERNAME }} \
+            --auth.token ${{ secrets.CONFLUENCE_API_TOKEN }} \
+            --output.path ./wiki
+        
+      - name: Commit and push changes
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: './wiki'
+          message: 'docs: sync ALL Confluence spaces'
+          default_author: github_actions
+          
