@@ -1,8 +1,6 @@
 name: Sync ALL Confluence Spaces
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 0 * * 0' # Weekly sync
 
 jobs:
   export:
@@ -17,11 +15,14 @@ jobs:
         run: curl -LsSf https://uvx.sh/confluence-markdown-exporter/install.sh | sh
 
       - name: Export ALL Spaces
+        env:
+          # These variable names (CME_AUTH_USER/TOKEN) are the standard way 
+          # to pass credentials to the confluence-markdown-exporter tool
+          CME_AUTH_USER: ${{ secrets.CONFLUENCE_USERNAME }}
+          CME_AUTH_TOKEN: ${{ secrets.CONFLUENCE_API_TOKEN }}
         run: |
-          # The 'orgs' command fetches everything from your base URL
+          # We only provide the URL and the output path here
           /home/runner/.local/bin/cme orgs ${{ secrets.CONFLUENCE_URL }} \
-            --auth.user ${{ secrets.CONFLUENCE_USERNAME }} \
-            --auth.token ${{ secrets.CONFLUENCE_API_TOKEN }} \
             --output.path ./wiki
         
       - name: Commit and push changes
@@ -30,4 +31,3 @@ jobs:
           add: './wiki'
           message: 'docs: sync ALL Confluence spaces'
           default_author: github_actions
-          
